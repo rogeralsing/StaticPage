@@ -778,7 +778,9 @@ Renderer.prototype.code = function(code, lang, escaped) {
 };
 
 Renderer.prototype.blockquote = function(quote) {
-  return '<blockquote>\n' + quote + '</blockquote>\n';
+  var quote = '<blockquote>\n' + quote + '</blockquote>\n';
+  quote = this.options.blockQuoteCallback(quote);
+  return quote;
 };
 
 Renderer.prototype.html = function(html) {
@@ -816,7 +818,7 @@ Renderer.prototype.paragraph = function(text) {
 };
 
 Renderer.prototype.table = function(header, body) {
-  return '<table>\n'
+  return '<table class="' + this.options.tableCss +'">\n'
     + '<thead>\n'
     + header
     + '</thead>\n'
@@ -848,6 +850,7 @@ Renderer.prototype.em = function(text) {
 };
 
 Renderer.prototype.codespan = function(text) {
+  text = this.options.codespanCallback(text);
   return '<code>' + text + '</code>';
 };
 
@@ -881,7 +884,7 @@ Renderer.prototype.link = function(href, title, text) {
 };
 
 Renderer.prototype.image = function(href, title, text) {
-  var out = '<img src="' + href + '" alt="' + text + '"';
+  var out = '<img class="' + this.options.imgCss +'" src="' + href + '" alt="' + text + '"';
   if (title) {
     out += ' title="' + title + '"';
   }
@@ -1240,8 +1243,11 @@ marked.defaults = {
   headerPrefix: '',
   renderer: new Renderer,
   xhtml: false,
+
   tableCss: '',
   imgCss: '',
+  blockQuoteCallback: function(source) { return source; },
+  codespanCallback: function(source) { return source; }
 };
 
 /**
