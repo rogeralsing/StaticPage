@@ -1,3 +1,5 @@
+require('coffee-script')
+
 var fs = require('fs');
 var path = require('path')
 
@@ -9,6 +11,8 @@ var Liquid = require("liquid-node");
 var liquidEngine = new Liquid.Engine();
 
 var GitHubApi = require("github");
+
+var mkdirp = require('mkdirp');
 
 /*
 var git = require('nodegit');
@@ -45,7 +49,7 @@ marked.setOptions({
 	blockquote = blockquote
 	.replace('&lt;br/&gt;','<br/>')
 	.replace('</blockquote>','</div>');
-	if (warning){
+	if (warning) {
 		blockquote = blockquote.replace('<blockquote>','<div class="alert alert-warning">');
 	}
 	if (note){
@@ -66,13 +70,31 @@ if (typeof String.prototype.startsWith != 'function') {
   };
 }
 
-function processDirectory(dir)
+function processDirectory(root, dir)
 {
-	fs.readdir(dir, function (err,filenames)
-	{
-		filenames.forEach(function (filename)
-		{
-			fs.readFile(dir + filename, 'utf8', processFile(dir, undefined, filename));
+	var fullpath = path.join(root,dir);	
+
+	fs.readdir(fullpath, function (err,filenames) {
+		filenames.forEach(function (filename) {	
+			var fullFilePath = path.join(root,dir,filename);
+			fs.stat(fullFilePath, function(err, stat) {
+				if (stat && stat.isDirectory() && !filename.startsWith('_')) {
+					//a directory
+					var childDir = path.join(dir, filename);
+					processDirectory(root, childDir)
+				}
+				else
+				{
+					//a file
+					if (path.extname(filename) === ".md") {	
+						console.log("processing " + fullFilePath);
+						fs.readFile(fullFilePath, 'utf8', processFile(root, dir, filename));
+					}
+					else{
+						//console.log("ignore " + fullFilePath);
+					}
+				}
+			});
 		});
 	});	
 }
@@ -86,43 +108,62 @@ function processFile(root, dir, filename)
 			var content = fm(data);  				
 			//parse markdown
 			marked(content.body, function (err, body) {
-				if (err) throw err;
-							
-				body = '<link href="../css/highlight.css" rel="stylesheet" type="text/css" />' + body;
-
+				if (err) throw err;						
 				//apply layout
 				applyLayout(root, dir, filename, content.attributes.layout, body);
 			});
 		}
-		else
-		{
-			console.log("Plain " + filename);
+		else {
+			marked(data, function (err, body) {
+				if (err) throw err;						
+				//apply layout
+				applyLayout(root, dir, filename, undefined, body);
+			});
 		}
 	}
 }
 
 function applyLayout(root, dir, filename, layout, body)
 {
+	var filenameWoExtension = path.basename(filename,".md");
 	//no layout defined, just output the file to disk
 	if (layout === undefined) {
-		var outputfilename = path.basename(filename,".md");
-		fs.writeFile("C:\\Output\\html\\" + outputfilename + ".html", body, function() {});  
-		return;
+		
+		var fullDirPath = path.join("C:\\Output\\html\\",dir);
+		mkdirp(fullDirPath, function (err) {
+		    if (err) console.error(err)
+		    var fullFilePath = path.join(fullDirPath,filenameWoExtension + ".html");
+			fs.writeFile(fullFilePath, body, function(err) {
+				if (err) {
+					console.log('failed writing ' + fullFilePath)
+				}
+			});  
+		});
 	}
 	else {
-		fs.readFile("c:\\Output\\_layouts\\"+ layout +".html", 'utf8', function(err, data)
-		{
-			//if (fm.test(data)) {
-				var template = fm(data);
-				body = template.body.replace ("{{ content }}",body);
-				applyLayout(root, dir, filename, template.attributes.layout, body);
-			//}
-			/*else{		
-				body = data.replace ("{{ content }}",body);
-				applyLayout(root, dir, filename, undefined, body);		
-			}*/
+		var fullLayoutPath = path.join(root,"_layouts", layout + ".html");
+		//console.log("layout " + fullLayoutPath);
+		fs.readFile(fullLayoutPath, 'utf8', function(err, data) {
+			var template = fm(data);
+			 //console.log(template.attributes);
+			body = template.body.replace ("{{ content }}",body);
+			var page = new Liquid.Variable('page');
+
+			var props = {
+				content: body,
+				page: template.attributes
+			};
+			props.page.url = dir + "/" + filenameWoExtension;
+			if (props.page.title === undefined){
+				props.page.title = "";
+			}
+
+			liquidEngine.parseAndRender(body,props,true).then(function(output) {
+				applyLayout(root, dir, filename, template.attributes.layout, output);
+			});
+			
 		});		
 	}
 }
 
-processDirectory('C:\\Projects\\Git\\Github.com\\akkadotnet.github.com\\wiki\\');
+processDirectory('C:\\Projects\\Git\\Github.com\\akkadotnet.github.com','');
