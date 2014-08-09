@@ -81,8 +81,7 @@ function processFile(root, dir, filename)
 {
 	return function (err, data) {
 		if (err) throw err;
-		if (fm.test(data))
-		{
+		if (fm.test(data)) {
 			//get frontmatter
 			var content = fm(data);  				
 			//parse markdown
@@ -113,8 +112,15 @@ function applyLayout(root, dir, filename, layout, body)
 	else {
 		fs.readFile("c:\\Output\\_layouts\\"+ layout +".html", 'utf8', function(err, data)
 		{
-			console.log(data);
-			applyLayout(root, dir, filename, undefined, body);
+			//if (fm.test(data)) {
+				var template = fm(data);
+				body = template.body.replace ("{{ content }}",body);
+				applyLayout(root, dir, filename, template.attributes.layout, body);
+			//}
+			/*else{		
+				body = data.replace ("{{ content }}",body);
+				applyLayout(root, dir, filename, undefined, body);		
+			}*/
 		});		
 	}
 }
