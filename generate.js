@@ -8,7 +8,16 @@ var fm = require('front-matter');
 var Liquid = require("liquid-node");
 var liquidEngine = new Liquid.Engine();
 
-//var html = converter.makeHtml("*hello*");
+var GitHubApi = require("github");
+
+/*
+var git = require('nodegit');
+
+git.Repo.clone("https://github.com/akkadotnet/akkadotnet.github.com.git", "c:\\tempgit", null, function(error, repo) {
+	if (error) throw error;    
+});
+*/
+  
 
 
 marked.setOptions({
@@ -17,7 +26,7 @@ marked.setOptions({
   tables: true,
   breaks: false,
   pedantic: false,
-  sanitize: true,
+  sanitize: false,
   smartLists: true,
   smartypants: false,
   highlight: function (code) {
@@ -57,38 +66,39 @@ if (typeof String.prototype.startsWith != 'function') {
   };
 }
 
-var dir = "C:\\Projects\\Git\\Github.com\\akkadotnet.github.com\\wiki\\";
-fs.readdir(dir, function (err,filenames)
+function processDirectory(dir)
 {
-	filenames.forEach(function processFile(filename)
+	fs.readdir(dir, function (err,filenames)
 	{
-		fs.readFile(dir + filename, 'utf8', function(err, data) {
-			if (err) throw err;
-			if (fm.test(data))
-			{
-				var content = fm(data);  				
-				console.log("Front Matter " +  content.attributes.layout);
-				if (content.attributes.layout === undefined)
-				{
-					console.log("Error " + filename);
-				}
-				else
-				{
-
-					marked(content.body, function (err, body) {
-						if (err) throw err;
-					
-						var outputfilename = path.basename(filename,".md");
-						body = '<link href="../css/highlight.css" rel="stylesheet" type="text/css" />' + body;
-						fs.writeFile("C:\\Output\\html\\" + outputfilename + ".html", body, function() {});  
-					});
-					
-				}
-			}
-			else
-			{
-				console.log("Plain " + filename);
-			}
+		filenames.forEach(function (filename)
+		{
+			fs.readFile(dir + filename, 'utf8', processFile(filename));
 		});
-	});
-});
+	});	
+}
+
+function processFile(filename)
+{
+	return function (err, data) {
+		if (err) throw err;
+		if (fm.test(data))
+		{
+			var content = fm(data);  				
+			console.log("Front Matter " +  content.attributes.layout);
+
+			marked(content.body, function (err, body) {
+				if (err) throw err;
+			
+				var outputfilename = path.basename(filename,".md");
+				body = '<link href="../css/highlight.css" rel="stylesheet" type="text/css" />' + body;
+				fs.writeFile("C:\\Output\\html\\" + outputfilename + ".html", body, function() {});  
+			});
+		}
+		else
+		{
+			console.log("Plain " + filename);
+		}
+	}
+}
+
+processDirectory('C:\\Projects\\Git\\Github.com\\akkadotnet.github.com\\wiki\\');
