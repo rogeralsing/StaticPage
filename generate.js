@@ -72,32 +72,50 @@ function processDirectory(dir)
 	{
 		filenames.forEach(function (filename)
 		{
-			fs.readFile(dir + filename, 'utf8', processFile(filename));
+			fs.readFile(dir + filename, 'utf8', processFile(dir, undefined, filename));
 		});
 	});	
 }
 
-function processFile(filename)
+function processFile(root, dir, filename)
 {
 	return function (err, data) {
 		if (err) throw err;
 		if (fm.test(data))
 		{
+			//get frontmatter
 			var content = fm(data);  				
-			console.log("Front Matter " +  content.attributes.layout);
-
+			//parse markdown
 			marked(content.body, function (err, body) {
 				if (err) throw err;
-			
-				var outputfilename = path.basename(filename,".md");
+							
 				body = '<link href="../css/highlight.css" rel="stylesheet" type="text/css" />' + body;
-				fs.writeFile("C:\\Output\\html\\" + outputfilename + ".html", body, function() {});  
+
+				//apply layout
+				applyLayout(root, dir, filename, content.attributes.layout, body);
 			});
 		}
 		else
 		{
 			console.log("Plain " + filename);
 		}
+	}
+}
+
+function applyLayout(root, dir, filename, layout, body)
+{
+	//no layout defined, just output the file to disk
+	if (layout === undefined) {
+		var outputfilename = path.basename(filename,".md");
+		fs.writeFile("C:\\Output\\html\\" + outputfilename + ".html", body, function() {});  
+		return;
+	}
+	else {
+		fs.readFile("c:\\Output\\_layouts\\"+ layout +".html", 'utf8', function(err, data)
+		{
+			console.log(data);
+			applyLayout(root, dir, filename, undefined, body);
+		});		
 	}
 }
 
