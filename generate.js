@@ -1,7 +1,7 @@
 var fs = require('fs');
 var path = require('path')
 
-var marked = require('marked');
+var marked = require('./marked');
 
 var fm = require('front-matter');
 
