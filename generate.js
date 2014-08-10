@@ -101,65 +101,79 @@ function processDirectory(root, dir)
 
 function processFile(root, dir, filename)
 {
+	var addUrlToPage = function(page)
+	{
+		page.url = "/" +path.join(dir,filenameWoExtension).replace('\\','/');
+	}
+	var filenameWoExtension = path.basename(filename,".md");
+
 	return function (err, data) {
 		if (err) throw err;
 		if (fm.test(data)) {
 			//get frontmatter
-			var content = fm(data);  				
+			var template = fm(data);  				
+			var page = template.attributes;
+
 			//parse markdown
-			marked(content.body, function (err, body) {
+			marked(template.body, function (err, body) {
 				if (err) throw err;						
-				//apply layout
-				applyLayout(root, dir, filename, content.attributes.layout, body);
+				//apply layout				
+				addUrlToPage(page);
+				applyLayout(root, dir, filename, page.layout, body, page);
 			});
 		}
 		else {
 			marked(data, function (err, body) {
 				if (err) throw err;						
-				//apply layout
-				applyLayout(root, dir, filename, undefined, body);
+				//apply layout				
+				var page = {};
+				addUrlToPage(page);
+				applyLayout(root, dir, filename, undefined, body, page);
 			});
 		}
 	}
 }
 
-function applyLayout(root, dir, filename, layout, body)
+
+function saveFile(dir, filename, body){
+	var filenameWoExtension = path.basename(filename,".md");
+	
+	var fullDirPath = path.join("C:\\Output\\html\\",dir);
+	mkdirp(fullDirPath, function (err) {
+	    if (err) console.error(err)
+	    var fullFilePath = path.join(fullDirPath,filenameWoExtension + ".html");
+		fs.writeFile(fullFilePath, body, function(err) {
+			if (err) {
+				console.log('failed writing ' + fullFilePath)
+			}
+		});  
+	});
+}
+
+function applyLayout(root, dir, filename, layout, body, page)
 {
 	var filenameWoExtension = path.basename(filename,".md");
+	
 	//no layout defined, just output the file to disk
 	if (layout === undefined) {
-		
-		var fullDirPath = path.join("C:\\Output\\html\\",dir);
-		mkdirp(fullDirPath, function (err) {
-		    if (err) console.error(err)
-		    var fullFilePath = path.join(fullDirPath,filenameWoExtension + ".html");
-			fs.writeFile(fullFilePath, body, function(err) {
-				if (err) {
-					console.log('failed writing ' + fullFilePath)
-				}
-			});  
-		});
+		saveFile(dir, filename, body);
 	}
 	else {
 		var fullLayoutPath = path.join(root,"_layouts", layout + ".html");
-		//console.log("layout " + fullLayoutPath);
 		fs.readFile(fullLayoutPath, 'utf8', function(err, data) {
+			//we need layout frontmatter
 			var template = fm(data);
-			 //console.log(template.attributes);
-			body = template.body.replace ("{{ content }}",body);
-			var page = new Liquid.Variable('page');
 
 			var props = {
-				content: body,
-				page: template.attributes
+				page: page,
+				content: body
 			};
-			props.page.url = dir + "/" + filenameWoExtension;
 			if (props.page.title === undefined){
 				props.page.title = "";
 			}
 
-			liquidEngine.parseAndRender(body,props,true).then(function(output) {
-				applyLayout(root, dir, filename, template.attributes.layout, output);
+			liquidEngine.parseAndRender(template.body,props,true).then(function(output) {
+				applyLayout(root, dir, filename, template.attributes.layout, output, page);
 			});
 			
 		});		
