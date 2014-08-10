@@ -101,36 +101,27 @@ function processDirectory(root, dir)
 
 function processFile(root, dir, filename)
 {
-	var addUrlToPage = function(page)
+	var initPage = function(page)
 	{
 		page.url = "/" +path.join(dir,filenameWoExtension).replace('\\','/');
+		page.title = page.title || "";
 	}
 	var filenameWoExtension = path.basename(filename,".md");
 
 	return function (err, data) {
 		if (err) throw err;
-		if (fm.test(data)) {
-			//get frontmatter
-			var template = fm(data);  				
-			var page = template.attributes;
 
-			//parse markdown
-			marked(template.body, function (err, body) {
-				if (err) throw err;						
-				//apply layout				
-				addUrlToPage(page);
-				applyLayout(root, dir, filename, page.layout, body, page);
-			});
-		}
-		else {
-			marked(data, function (err, body) {
-				if (err) throw err;						
-				//apply layout				
-				var page = {};
-				addUrlToPage(page);
-				applyLayout(root, dir, filename, undefined, body, page);
-			});
-		}
+		//get frontmatter
+		var template = fm(data);  				
+		var page = template.attributes || {};
+
+		//parse markdown
+		marked(template.body, function (err, body) {
+			if (err) throw err;						
+			//apply layout				
+			initPage(page);
+			applyLayout(root, dir, filename, page.layout, body, page);
+		});		
 	}
 }
 
@@ -164,13 +155,12 @@ function applyLayout(root, dir, filename, layout, body, page)
 			//we need layout frontmatter
 			var template = fm(data);
 
+			//create the page props for this recursion
 			var props = {
 				page: page,
 				content: body
 			};
-			if (props.page.title === undefined){
-				props.page.title = "";
-			}
+			
 
 			liquidEngine.parseAndRender(template.body,props,true).then(function(output) {
 				applyLayout(root, dir, filename, template.attributes.layout, output, page);
