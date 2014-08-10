@@ -70,6 +70,7 @@ function start(root)
     posts: [],
     directories: [],
     root_path:root,
+    title: "Akka.NET"
   };
 
   processDirectory(root,'', site);
@@ -86,7 +87,7 @@ function processMarkdown(site){
         var dir = path.relative(site.root_path,path.dirname(page.path));
         var filename = path.basename(page.url);
         console.log(page.url)
-        applyLayout(site.root_path, dir, filename, page.layout, body, page);
+        applyLayout(site, site.root_path, dir, filename, page.layout, body, page);
       });
   });
 }
@@ -142,7 +143,7 @@ function processDirectory(root, dir, site)
   });
 }
 
-function applyLayout(root, dir, filename, layout, body, page)
+function applyLayout(site, root, dir, filename, layout, body, page)
 {
 	//no layout defined, just output the file to disk
 	if (layout === undefined) {
@@ -157,11 +158,12 @@ function applyLayout(root, dir, filename, layout, body, page)
 			//create the page props for this recursion
 			var props = {
 				page: page,
-				content: body
+				content: body,
+        site: site
 			};
 
 			liquidEngine.parseAndRender(template.body,props,true).then(function(output) {
-				applyLayout(root, dir, filename, template.attributes.layout, output, page);
+				applyLayout(site, root, dir, filename, template.attributes.layout, output, page);
 			});
 
 		});
