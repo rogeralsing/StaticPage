@@ -160,7 +160,18 @@ function applyLayout(site, root, dir, filename, layout, body, page)
 {
 	//no layout defined, just output the file to disk
 	if (layout === undefined) {
-		saveFile(dir, filename, body);
+
+    //create the page props for this recursion
+    var props = {
+      page: page,
+      content: body,
+      site: site
+    };
+
+    liquidEngine.parseAndRender(body,props,true).then(function(output) {
+      saveFile(dir, filename, output);
+    });
+
 	}
 	else {
 		var fullLayoutPath = path.join(root,"_layouts", layout + ".html");
