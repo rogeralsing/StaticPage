@@ -78,10 +78,16 @@ function start(root)
 }
 
 function processMarkdown(site){
-  site.markdown_files.forEach(function(fullFilePath){
-    var filename = path.basename(fullFilePath);
-    var dir = path.relative(site.root_path, path.dirname(fullFilePath));
-    fs.readFile(fullFilePath, 'utf8', processFile(site.root_path, dir, filename));
+  site.markdown_files.forEach(function(page){
+      //parse markdown
+      marked(page.content, function (err, body) {
+        if (err) throw err;
+        //apply layout
+        var dir = path.relative(site.root_path,path.dirname(page.path));
+        var filename = path.basename(page.url);
+        console.log(page.url)
+        applyLayout(site.root_path, dir, filename, page.layout, body, page);
+      });
   });
 }
 
@@ -101,57 +107,39 @@ function processDirectory(root, dir, site)
 		else
 		{
       var extension = path.extname(filename);
+      var filenameWoExtension = path.basename(filename,extension);
+
+      var getPage = function (site, fullFilePath) {
+        var f = fs.readFileSync(fullFilePath, 'utf8');
+        var front = fm(f);
+        var page = front.attributes;
+        page.content = front.body;
+        page.path = fullFilePath;
+        page.url = path.join(path.relative(site.root_path,path.dirname(fullFilePath)),filenameWoExtension);
+        page.title = page.title || '';
+        page.date = page.date || '';
+        site.pages.push(page);
+        return page;
+      }
+
       switch(extension)
       {
         case ".md":
         case ".markdown":
-            site.markdown_files.push(fullFilePath);
+            var page = getPage(site, fullFilePath);
+            site.markdown_files.push(page);
             break;
         case ".html":
         case ".htm":
-            site.html_pages.push(fullFilePath);
+            var page = getPage(site, fullFilePath);
+            site.html_pages.push(page);
             break;
         default:
             site.static_files.push(fullFilePath);
           break;
       }
-		/*	//a file
-			if (path.extname(filename) === ".md") {
-        site.markdown_pages.push(fullFilePath);
-				//console.log("processing " + fullFilePath);
-				//fs.readFile(fullFilePath, 'utf8', processFile(root, dir, filename));
-			}
-			else{
-				//console.log("ignore " + fullFilePath);
-			}*/
 		}
   });
-}
-
-function processFile(root, dir, filename)
-{
-	var initPage = function(page)
-	{
-		page.url = "/" +path.join(dir,filenameWoExtension).replace('\\','/');
-		page.title = page.title || "";
-	}
-	var filenameWoExtension = path.basename(filename,".md");
-
-	return function (err, data) {
-		if (err) throw err;
-
-		//get frontmatter
-		var template = fm(data);
-		var page = template.attributes || {};
-
-		//parse markdown
-		marked(template.body, function (err, body) {
-			if (err) throw err;
-			//apply layout
-			initPage(page);
-			applyLayout(root, dir, filename, page.layout, body, page);
-		});
-	}
 }
 
 function applyLayout(root, dir, filename, layout, body, page)
