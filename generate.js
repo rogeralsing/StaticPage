@@ -76,6 +76,7 @@ function start(root)
   processDirectory(root,'', site);
   //console.log(site);
   processMarkdown(site);
+  processHtml(site);
 }
 
 function processMarkdown(site){
@@ -89,6 +90,18 @@ function processMarkdown(site){
         console.log(page.url)
         applyLayout(site, site.root_path, dir, filename, page.layout, body, page);
       });
+  });
+}
+
+function processHtml(site){
+  site.html_pages.forEach(function(page){
+      //parse markdown
+      var body = page.content;
+      //apply layout
+      var dir = path.relative(site.root_path,path.dirname(page.path));
+      var filename = path.basename(page.url);
+      console.log(page.url)
+      applyLayout(site, site.root_path, dir, filename, page.layout, body, page);
   });
 }
 
