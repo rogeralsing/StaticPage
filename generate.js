@@ -1,5 +1,3 @@
-require('coffee-script')
-
 var fs = require('fs');
 var path = require('path')
 
@@ -13,15 +11,6 @@ var liquidEngine = new Liquid.Engine();
 var GitHubApi = require("github");
 
 var mkdirp = require('mkdirp');
-
-/*
-var git = require('nodegit');
-
-git.Repo.clone("https://github.com/akkadotnet/akkadotnet.github.com.git", "c:\\tempgit", null, function(error, repo) {
-	if (error) throw error;    
-});
-*/
-  
 
 
 marked.setOptions({
@@ -70,33 +59,73 @@ if (typeof String.prototype.startsWith != 'function') {
   };
 }
 
-function processDirectory(root, dir)
+function start(root)
 {
-	var fullpath = path.join(root,dir);	
+  var site = {
+    time: new Date(),
+    html_pages: [],
+    markdown_files: [],
+    static_files: [],
+    pages: [],
+    posts: [],
+    directories: [],
+    root_path:root,
+  };
 
-	fs.readdir(fullpath, function (err,filenames) {
-		filenames.forEach(function (filename) {	
-			var fullFilePath = path.join(root,dir,filename);
-			fs.stat(fullFilePath, function(err, stat) {
-				if (stat && stat.isDirectory() && !filename.startsWith('_')) {
-					//a directory
-					var childDir = path.join(dir, filename);
-					processDirectory(root, childDir)
-				}
-				else
-				{
-					//a file
-					if (path.extname(filename) === ".md") {	
-						console.log("processing " + fullFilePath);
-						fs.readFile(fullFilePath, 'utf8', processFile(root, dir, filename));
-					}
-					else{
-						//console.log("ignore " + fullFilePath);
-					}
-				}
-			});
-		});
-	});	
+  processDirectory(root,'', site);
+  //console.log(site);
+  processMarkdown(site);
+}
+
+function processMarkdown(site){
+  site.markdown_files.forEach(function(fullFilePath){
+    var filename = path.basename(fullFilePath);
+    var dir = path.relative(site.root_path, path.dirname(fullFilePath));
+    fs.readFile(fullFilePath, 'utf8', processFile(site.root_path, dir, filename));
+  });
+}
+
+function processDirectory(root, dir, site)
+{
+  site.directories.push(dir);
+  var fullpath = path.join(root,dir);
+  var filenames = fs.readdirSync(fullpath);
+  filenames.forEach(function (filename) {
+  	var fullFilePath = path.join(root,dir,filename);
+  	var stat = fs.statSync(fullFilePath);
+		if (stat && stat.isDirectory() && !(filename.startsWith('_') || filename.startsWith('.'))) {
+			//a directory
+			var childDir = path.join(dir, filename);
+			processDirectory(root, childDir, site)
+		}
+		else
+		{
+      var extension = path.extname(filename);
+      switch(extension)
+      {
+        case ".md":
+        case ".markdown":
+            site.markdown_files.push(fullFilePath);
+            break;
+        case ".html":
+        case ".htm":
+            site.html_pages.push(fullFilePath);
+            break;
+        default:
+            site.static_files.push(fullFilePath);
+          break;
+      }
+		/*	//a file
+			if (path.extname(filename) === ".md") {
+        site.markdown_pages.push(fullFilePath);
+				//console.log("processing " + fullFilePath);
+				//fs.readFile(fullFilePath, 'utf8', processFile(root, dir, filename));
+			}
+			else{
+				//console.log("ignore " + fullFilePath);
+			}*/
+		}
+  });
 }
 
 function processFile(root, dir, filename)
@@ -112,39 +141,21 @@ function processFile(root, dir, filename)
 		if (err) throw err;
 
 		//get frontmatter
-		var template = fm(data);  				
+		var template = fm(data);
 		var page = template.attributes || {};
 
 		//parse markdown
 		marked(template.body, function (err, body) {
-			if (err) throw err;						
-			//apply layout				
+			if (err) throw err;
+			//apply layout
 			initPage(page);
 			applyLayout(root, dir, filename, page.layout, body, page);
-		});		
+		});
 	}
-}
-
-
-function saveFile(dir, filename, body){
-	var filenameWoExtension = path.basename(filename,".md");
-	
-	var fullDirPath = path.join("C:\\Output\\html\\",dir);
-	mkdirp(fullDirPath, function (err) {
-	    if (err) console.error(err)
-	    var fullFilePath = path.join(fullDirPath,filenameWoExtension + ".html");
-		fs.writeFile(fullFilePath, body, function(err) {
-			if (err) {
-				console.log('failed writing ' + fullFilePath)
-			}
-		});  
-	});
 }
 
 function applyLayout(root, dir, filename, layout, body, page)
 {
-	var filenameWoExtension = path.basename(filename,".md");
-	
 	//no layout defined, just output the file to disk
 	if (layout === undefined) {
 		saveFile(dir, filename, body);
@@ -160,14 +171,27 @@ function applyLayout(root, dir, filename, layout, body, page)
 				page: page,
 				content: body
 			};
-			
 
 			liquidEngine.parseAndRender(template.body,props,true).then(function(output) {
 				applyLayout(root, dir, filename, template.attributes.layout, output, page);
 			});
-			
-		});		
+
+		});
 	}
 }
 
-processDirectory('C:\\Projects\\Git\\Github.com\\akkadotnet.github.com','');
+function saveFile(dir, filename, body){
+	var fullDirPath = path.join("C:\\Output\\html\\",dir);
+	mkdirp(fullDirPath, function (err) {
+	    if (err) console.error(err)
+	    var filenameWoExtension = path.basename(filename,".md");
+	    var fullFilePath = path.join(fullDirPath,filenameWoExtension + ".html");
+		fs.writeFile(fullFilePath, body, function(err) {
+			if (err) {
+				console.log('failed writing ' + fullFilePath)
+			}
+		});
+	});
+}
+
+start('C:\\Projects\\Git\\Github.com\\akkadotnet.github.com');
