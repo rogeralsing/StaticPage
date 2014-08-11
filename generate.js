@@ -204,7 +204,7 @@ function saveFile(dir, filename, body) {
             if (err) {
                 console.log('failed writing ' + fullFilePath)
             } else {
-                console.log("wrote file " + fullFilePath)
+                console.log("wrote file " + fullFilePath);
             }
         });
     });
