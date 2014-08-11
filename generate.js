@@ -195,7 +195,7 @@ function applyLayout(site, root, dir, filename, layout, body, page) {
 }
 
 function saveFile(dir, filename, body) {
-    var fullDirPath = path.join("C:\\Output\\html\\", dir);
+    var fullDirPath = path.join("output", dir);
     mkdirp(fullDirPath, function (err) {
         if (err) console.error(err)
         var filenameWoExtension = path.basename(filename, ".md");
