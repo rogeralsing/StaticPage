@@ -203,6 +203,8 @@ function saveFile(dir, filename, body) {
         fs.writeFile(fullFilePath, body, function (err) {
             if (err) {
                 console.log('failed writing ' + fullFilePath)
+            } else {
+                console.log("wrote file " + fullFilePath)
             }
         });
     });
