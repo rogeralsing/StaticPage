@@ -1,0 +1,34 @@
+{
+  "name": "StaticPage",
+  "version": "0.0.1",
+  "description": "JS subset of Jekyll",
+  "main": "generate.js",
+  "dependencies": {
+    "front-matter": "^0.2.0",
+    "liquid-node": "^2.0.0",
+    "git": "^0.1.5",
+    "highlight.js": "^8.1.0",
+    "mkdirp": "^0.5.0",
+    "nodegit": "^0.1.4",
+    "github": "^0.2.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rogeralsing/StaticPage.git"
+  },
+  "keywords": [
+    "jekyll",
+    "markdown",
+    "static-page"
+  ],
+  "author": "Roger Alsing",
+  "license": "Apache 2",
+  "bugs": {
+    "url": "https://github.com/rogeralsing/StaticPage/issues"
+  },
+  "homepage": "https://github.com/rogeralsing/StaticPage"
+}
