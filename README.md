@@ -1,7 +1,8 @@
-* Static Page
+# Static Page
 
 Small semi clone of Jekyll
-With support for
+
+## Features
 
 * Markdown and Html pages with YAML front matter
 * Liquid tags
