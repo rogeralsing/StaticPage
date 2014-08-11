@@ -208,4 +208,4 @@ function saveFile(dir, filename, body) {
     });
 }
 
-start('C:\\Projects\\Git\\Github.com\\akkadotnet.github.com');
+start('site');
