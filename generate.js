@@ -78,18 +78,19 @@ function start(root) {
     
     processDirectory(root, '', site);
     //console.log(site);
-    processMarkdown(site);
-    processHtml(site);
+    processMarkdownFiles(site);
+    processHtmlFiles(site);
+    processStaticFiles(site);
 }
 
-function processMarkdown(site) {
+function processMarkdownFiles(site) {
     site.markdown_files.forEach(function (page) {
         //parse markdown
         marked(page.content, function (err, body) {
             if (err) throw err;
             //apply layout
             var dir = path.relative(site.root_path, path.dirname(page.path));
-            var filename = path.basename(page.url);
+            var filename = removeFileExtension(page.path) + ".html";
             console.log(page.url)
             applyLayout(site, site.root_path, dir, filename, page.layout, body,
         page);
@@ -97,16 +98,33 @@ function processMarkdown(site) {
     });
 }
 
-function processHtml(site) {
+function processHtmlFiles(site) {
     site.html_pages.forEach(function (page) {
         //parse markdown
         var body = page.content;
         //apply layout
         var dir = path.relative(site.root_path, path.dirname(page.path));
-        var filename = path.basename(page.url);
+        var filename = removeFileExtension(page.path) + ".html";
         console.log(page.url)
         applyLayout(site, site.root_path, dir, filename, page.layout, body, page);
     });
+}
+
+function processStaticFiles(site) {
+    site.static_files.forEach(function (file) {
+       
+        var body = fs.readFileSync(file);
+        var dir = path.relative(site.root_path, path.dirname(file));
+        var filename = path.basename(file);
+
+        saveFile(dir, filename, body);
+    });
+}
+
+function removeFileExtension(filename) {
+    var extension = path.extname(filename);
+    var filenameWoExtension = path.basename(filename, extension);
+    return filenameWoExtension;
 }
 
 function processDirectory(root, dir, site) {
@@ -123,22 +141,20 @@ function processDirectory(root, dir, site) {
             var childDir = path.join(dir, filename);
             processDirectory(root, childDir, site)
         } else {
-            var extension = path.extname(filename);
-            var filenameWoExtension = path.basename(filename, extension);
-            
+
             var getPage = function (site, fullFilePath) {
                 var f = fs.readFileSync(fullFilePath, 'utf8');
                 var front = fm(f);
                 var page = front.attributes;
                 page.content = front.body;
                 page.path = fullFilePath;
-                page.url = path.join(path.relative(site.root_path, path.dirname(fullFilePath)), filenameWoExtension);
+                page.url = path.join(path.relative(site.root_path, path.dirname(fullFilePath)), removeFileExtension(filename));
                 page.title = page.title || '';
                 page.date = page.date || '';
                 site.pages.push(page);
                 return page;
             }
-            
+            var extension = path.extname(filename);
             switch (extension) {
                 case ".md":
                 case ".markdown":
@@ -198,8 +214,7 @@ function saveFile(dir, filename, body) {
     var fullDirPath = path.join("output", dir);
     mkdirp(fullDirPath, function (err) {
         if (err) console.error(err)
-        var filenameWoExtension = path.basename(filename, ".md");
-        var fullFilePath = path.join(fullDirPath, filenameWoExtension + ".html");
+        var fullFilePath = path.join(fullDirPath, filename);
         fs.writeFile(fullFilePath, body, function (err) {
             if (err) {
                 console.log('failed writing ' + fullFilePath)
