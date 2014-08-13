@@ -1,7 +1,7 @@
 var S = require('string');
 var fs = require('fs');
-var path = require('path')
-
+var path = require('path');
+var yaml = require('yaml-js');
 var marked = require('./marked-config');
 
 var fm = require('front-matter');
@@ -10,6 +10,7 @@ var Liquid = require("liquid-node");
 var liquidEngine = new Liquid.Engine();
 
 var mkdirp = require('mkdirp');
+
 
 function start(root) {
     var site = {
@@ -24,6 +25,8 @@ function start(root) {
         title: "Akka.NET"
     };
     
+    site.config = yaml.load(fs.readFileSync(path.join(root, '_config.yml'), 'UTF8'));
+
     processDirectory(root, '', site);
     processMarkdownFiles(site);
     processHtmlFiles(site);
