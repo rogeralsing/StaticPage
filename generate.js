@@ -219,13 +219,8 @@ function saveFile(dir, filename, body) {
     mkdirp(fullDirPath, function (err) {
         if (err) console.error(err)
         var fullFilePath = path.join(fullDirPath, filename);
-        fs.writeFile(fullFilePath, body, function (err) {
-            if (err) {
-                console.log('failed writing ' + fullFilePath + "\n" + err);
-            } else {
-                console.log("wrote file " + fullFilePath);
-            }
-        });
+        fs.writeFileSync(fullFilePath, body);
+        console.log("wrote file " + fullFilePath);
     });
 }
 
