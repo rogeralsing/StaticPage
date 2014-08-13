@@ -1,7 +1,8 @@
+var S = require('string');
 var fs = require('fs');
 var path = require('path')
 
-var marked = require('./marked');
+var marked = require('./marked-config');
 
 var fm = require('front-matter');
 
@@ -9,57 +10,6 @@ var Liquid = require("liquid-node");
 var liquidEngine = new Liquid.Engine();
 
 var mkdirp = require('mkdirp');
-
-
-marked.setOptions({
-    renderer: new marked.Renderer(),
-    gfm: true,
-    tables: true,
-    breaks: false,
-    pedantic: false,
-    sanitize: false,
-    smartLists: true,
-    smartypants: false,
-    highlight: function (code) {
-        var highlighted = require('highlight.js').highlightAuto(code).value;
-        return highlighted;
-    },
-    
-    langPrefix: 'hljs lang-',
-    tableCss: "table table-bordered",
-    imgCss: "img-responsive",
-    blockQuoteCallback: function (blockquote) {
-        
-        var warning = blockquote.toLowerCase().startsWith(
-      "<blockquote>\n<p><strong>warning");
-        var note = blockquote.toLowerCase().startsWith(
-      "<blockquote>\n<p><strong>note");
-        
-        blockquote = blockquote
-      .replace('&lt;br/&gt;', '<br/>')
-      .replace('</blockquote>', '</div>');
-        if (warning) {
-            blockquote = blockquote.replace('<blockquote>',
-        '<div class="alert alert-warning">');
-        }
-        if (note) {
-            blockquote = blockquote.replace('<blockquote>',
-        '<div class="alert alert-success">');
-        }
-        
-        return blockquote;
-    },
-    codespanCallback: function (codespan) {
-        return codespan;
-    }
-});
-
-if (typeof String.prototype.startsWith != 'function') {
-    // see below for better implementation!
-    String.prototype.startsWith = function (str) {
-        return this.indexOf(str) == 0;
-    };
-}
 
 function start(root) {
     var site = {
@@ -75,7 +25,6 @@ function start(root) {
     };
     
     processDirectory(root, '', site);
-    //console.log(site);
     processMarkdownFiles(site);
     processHtmlFiles(site);
     processStaticFiles(site);
@@ -135,7 +84,7 @@ function processDirectory(root, dir, site) {
         if (stat &&
       stat.isDirectory()) {
             //a directory
-            if (!(filename.startsWith('_') || filename.startsWith('.'))) {
+            if (!(S(filename).startsWith('_') || S(filename).startsWith('.'))) {
                 var childDir = path.join(dir, filename);
                 processDirectory(root, childDir, site)
             }
