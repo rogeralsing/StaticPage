@@ -221,7 +221,7 @@ function saveFile(dir, filename, body) {
         var fullFilePath = path.join(fullDirPath, filename);
         fs.writeFile(fullFilePath, body, function (err) {
             if (err) {
-                console.log('failed writing ' + fullFilePath)
+                console.log('failed writing ' + fullFilePath + "\n" + err);
             } else {
                 console.log("wrote file " + fullFilePath);
             }
