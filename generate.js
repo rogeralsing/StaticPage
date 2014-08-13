@@ -135,11 +135,15 @@ function processDirectory(root, dir, site) {
         var fullFilePath = path.join(root, dir, filename);
         var stat = fs.statSync(fullFilePath);
         if (stat &&
-      stat.isDirectory() && !(filename.startsWith('_') ||
-        filename.startsWith('.'))) {
+      stat.isDirectory()) {
             //a directory
-            var childDir = path.join(dir, filename);
-            processDirectory(root, childDir, site)
+            if (!(filename.startsWith('_') || filename.startsWith('.'))) {
+                var childDir = path.join(dir, filename);
+                processDirectory(root, childDir, site)
+            }
+            else {
+                //ignore this directory...
+            }            
         } else {
 
             var getPage = function (site, fullFilePath) {
