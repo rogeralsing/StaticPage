@@ -8,8 +8,6 @@ var fm = require('front-matter');
 var Liquid = require("liquid-node");
 var liquidEngine = new Liquid.Engine();
 
-var GitHubApi = require("github");
-
 var mkdirp = require('mkdirp');
 
 
