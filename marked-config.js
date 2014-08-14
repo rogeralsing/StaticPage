@@ -11,12 +11,13 @@ marked.setOptions({
     sanitize: false,
     smartLists: true,
     smartypants: false,
-    highlight: function (code, lang) {      
+    highlight: function (code, lang) {
         try {
             var highlighted = require('highlight.js').highlight(lang,code,true).value;
             return highlighted;
         } catch (err) {            
-            return err + code;
+            var highlighted2 = require('highlight.js').highlightAuto(code).value;
+            return highlighted2;
         }
     },
     langPrefix: 'hljs lang-',
