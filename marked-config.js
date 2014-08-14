@@ -17,7 +17,7 @@ marked.setOptions({
             return highlighted;
         } catch(err) {
             try{
-                var highlighted2 = highlight.highlight(code, "text").value;
+                var highlighted2 = highlight.highlightAuto(code).value;
                 return highlighted2;
             }
             catch(err){
