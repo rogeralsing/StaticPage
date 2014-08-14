@@ -15,8 +15,8 @@ marked.setOptions({
             var highlighted = require('highlight.js').highlight(code, lang).value;
             return highlighted;
         } catch(err) {
-            var highlighted = require('highlight.js').highlightAuto(code).value;
-            return highlighted;
+            var highlighted2 = require('highlight.js').highlight(code, "text").value;
+            return highlighted2;
         }
     },
     langPrefix: 'hljs lang-',
