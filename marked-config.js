@@ -21,7 +21,7 @@ marked.setOptions({
                 return highlighted2;
             }
             catch(err){
-                return "Error Parsing " + code;
+                return "Error Parsing " + err + code;
             }
         }
     },
