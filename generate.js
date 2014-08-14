@@ -3,14 +3,17 @@ var fs = require('fs');
 var path = require('path');
 var yaml = require('yaml-js');
 var marked = require('./marked-config');
-
 var fm = require('front-matter');
-
 var Liquid = require("liquid-node");
 var liquidEngine = new Liquid.Engine();
-
 var mkdirp = require('mkdirp');
-
+var outputRoot = "../tmp/output";
+var wikiRoot = "../tmp/wiki";
+var siteRoot = '../tmp/site';
+var wikiFiles = fs.readdirSync(wikiRoot);
+wikiFiles.forEach(function(filename) {
+    console.log(filename);
+});
 
 function start(root) {
     var site = {
@@ -24,9 +27,7 @@ function start(root) {
         root_path: root,
         title: "Akka.NET"
     };
-    
     site.config = yaml.load(fs.readFileSync(path.join(root, '_config.yml'), 'UTF8'));
-
     processDirectory(root, '', site);
     processMarkdownFiles(site);
     processHtmlFiles(site);
@@ -34,22 +35,21 @@ function start(root) {
 }
 
 function processMarkdownFiles(site) {
-    site.markdown_files.forEach(function (page) {
+    site.markdown_files.forEach(function(page) {
         //parse markdown
-        marked(page.content, function (err, body) {
-            if (err) throw err;
+        marked(page.content, function(err, body) {
+            if(err) throw err;
             //apply layout
             var dir = path.relative(site.root_path, path.dirname(page.path));
             var filename = removeFileExtension(page.path) + ".html";
             console.log(page.url)
-            applyLayout(site, site.root_path, dir, filename, page.layout, body,
-        page);
+            applyLayout(site, site.root_path, dir, filename, page.layout, body, page);
         });
     });
 }
 
 function processHtmlFiles(site) {
-    site.html_pages.forEach(function (page) {
+    site.html_pages.forEach(function(page) {
         //parse markdown
         var body = page.content;
         //apply layout
@@ -61,12 +61,10 @@ function processHtmlFiles(site) {
 }
 
 function processStaticFiles(site) {
-    site.static_files.forEach(function (file) {
-       
+    site.static_files.forEach(function(file) {
         var body = fs.readFileSync(file);
         var dir = path.relative(site.root_path, path.dirname(file));
         var filename = path.basename(file);
-
         saveFile(dir, filename, body);
     });
 }
@@ -81,22 +79,19 @@ function processDirectory(root, dir, site) {
     site.directories.push(dir);
     var fullpath = path.join(root, dir);
     var filenames = fs.readdirSync(fullpath);
-    filenames.forEach(function (filename) {
+    filenames.forEach(function(filename) {
         var fullFilePath = path.join(root, dir, filename);
         var stat = fs.statSync(fullFilePath);
-        if (stat &&
-      stat.isDirectory()) {
+        if(stat && stat.isDirectory()) {
             //a directory
-            if (!(S(filename).startsWith('_') || S(filename).startsWith('.'))) {
+            if(!(S(filename).startsWith('_') || S(filename).startsWith('.'))) {
                 var childDir = path.join(dir, filename);
                 processDirectory(root, childDir, site)
-            }
-            else {
+            } else {
                 //ignore this directory...
-            }            
+            }
         } else {
-
-            var getPage = function (site, fullFilePath) {
+            var getPage = function(site, fullFilePath) {
                 var f = fs.readFileSync(fullFilePath, 'utf8');
                 var front = fm(f);
                 var page = front.attributes;
@@ -109,7 +104,7 @@ function processDirectory(root, dir, site) {
                 return page;
             }
             var extension = path.extname(filename);
-            switch (extension) {
+            switch(extension) {
                 case ".md":
                 case ".markdown":
                     var page = getPage(site, fullFilePath);
@@ -130,48 +125,41 @@ function processDirectory(root, dir, site) {
 
 function applyLayout(site, root, dir, filename, layout, body, page) {
     //no layout defined, just output the file to disk
-    if (layout === undefined) {
-        
+    if(layout === undefined) {
         //create the page props for this recursion
         var props = {
             page: page,
             content: body,
             site: site
         };
-        
-        liquidEngine.parseAndRender(body, props, true).then(function (output) {
+        liquidEngine.parseAndRender(body, props, true).then(function(output) {
             saveFile(dir, filename, output);
         });
-
     } else {
         var fullLayoutPath = path.join(root, "_layouts", layout + ".html");
-        fs.readFile(fullLayoutPath, 'utf8', function (err, data) {
+        fs.readFile(fullLayoutPath, 'utf8', function(err, data) {
             //we need layout frontmatter
             var template = fm(data);
-            
             //create the page props for this recursion
             var props = {
                 page: page,
                 content: body,
                 site: site
             };
-            
-            liquidEngine.parseAndRender(template.body, props, true).then(function (output) {
+            liquidEngine.parseAndRender(template.body, props, true).then(function(output) {
                 applyLayout(site, root, dir, filename, template.attributes.layout, output, page);
             });
-
         });
     }
 }
 
 function saveFile(dir, filename, body) {
-    var fullDirPath = path.join("output", dir);
-    mkdirp(fullDirPath, function (err) {
-        if (err) console.error(err)
+    var fullDirPath = path.join(outputRoot, dir);
+    mkdirp(fullDirPath, function(err) {
+        if(err) console.error(err)
         var fullFilePath = path.join(fullDirPath, filename);
         fs.writeFileSync(fullFilePath, body);
         console.log("wrote file " + fullFilePath);
     });
 }
-
-start('site');
+start(siteRoot);
