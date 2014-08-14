@@ -1,10 +1,18 @@
-rm -rf ../tmp/wiki
-rm -rf ../tmp/site
-rm -rf ../tmp/output
+rm -rf wiki
+rm -rf site
+rm -rf output
+
 npm -d install
 git clone https://github.com/akkadotnet/akka.net.wiki ../tmp/wiki
-git clone https://github.com/akkadotnet/akkadotnet.github.com ../tmp/site
-git clone https://rogeralsing:alexander02@github.com/rogeralsing/rogeralsing.github.io ../tmp/output
+git clone https://github.com/akkadotnet/template.akkadotnet.github.com ../tmp/site
+git clone https://rogeralsing:alexander02@github.com/akkadotnet/akkadotnet.github.com ../tmp/output
+
+rm -rf ../tmp/site/wiki
+mkdir ../tmp/site/wiki
+
+rm -rf ../tmp/output/wiki
+mkdir ../tmp/output/wiki
+
 node generate.js
 cd ../tmp/output
 git add -A

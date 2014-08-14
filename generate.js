@@ -16,7 +16,7 @@ function copyWikiFiles() {
     wikiFiles.forEach(function(filename) {
         var stat = fs.statSync(path.join(wikiRoot, filename));
         if(stat && stat.isDirectory()) {} else {
-            var newName = filename.replace('-', ' ');
+            var newName = S(filename).replaceAll('-', ' ').s;
             var body = fs.readFileSync(path.join(wikiRoot, filename), 'UTF8');
             console.log(newName);
             //console.log(body);
