@@ -10,12 +10,25 @@ var mkdirp = require('mkdirp');
 var outputRoot = "../tmp/output";
 var wikiRoot = "../tmp/wiki";
 var siteRoot = '../tmp/site';
-var wikiFiles = fs.readdirSync(wikiRoot);
-wikiFiles.forEach(function(filename) {
-    console.log(filename);
-});
+
+function copyWikiFiles() {
+    var wikiFiles = fs.readdirSync(wikiRoot);
+    wikiFiles.forEach(function(filename) {
+        var stat = fs.statSync(path.join(wikiRoot, filename));
+        if(stat && stat.isDirectory()) {} else {
+            var newName = filename.replace('-', ' ');
+            var body = fs.readFileSync(path.join(wikiRoot, filename), 'UTF8');
+            console.log(newName);
+            //console.log(body);
+            var title = removeFileExtension(newName);
+            body = '---\nlayout: wiki\ntitle: ' + title + '\n---\n' + body;
+            fs.writeFileSync(path.join(siteRoot, "wiki", newName), body);
+        }
+    });
+}
 
 function start(root) {
+    copyWikiFiles();
     var site = {
         time: new Date(),
         html_pages: [],
