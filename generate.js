@@ -176,3 +176,4 @@ function saveFile(dir, filename, body) {
     });
 }
 start(siteRoot);
+console.log("done..");

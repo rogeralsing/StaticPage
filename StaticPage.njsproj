@@ -25,6 +25,7 @@
     <Content Include="package.json" />
     <Content Include="README.md" />
     <Compile Include="generate.js" />
+    <Compile Include="marked-config.js" />
     <Compile Include="marked.js" />
   </ItemGroup>
   <ItemGroup />
