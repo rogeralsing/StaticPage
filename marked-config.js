@@ -1,6 +1,7 @@
 ﻿
 var S = require('string');
 var marked = require('./marked');
+var highlight = require('highlight.js')
 marked.setOptions({
     renderer: new marked.Renderer(),
     gfm: true,
@@ -12,11 +13,16 @@ marked.setOptions({
     smartypants: false,
     highlight: function(code, lang) {
         try {
-            var highlighted = require('highlight.js').highlight(code, lang).value;
+            var highlighted = highlight.highlight(code, lang).value;
             return highlighted;
         } catch(err) {
-            var highlighted2 = require('highlight.js').highlight(code, "text").value;
-            return highlighted2;
+            try{
+                var highlighted2 = highlight.highlight(code, "text").value;
+                return highlighted2;
+            }
+            catch(err){
+                return "Error Parsing " + code;
+            }
         }
     },
     langPrefix: 'hljs lang-',
