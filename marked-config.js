@@ -31,7 +31,7 @@ marked.setOptions({
             blockquote = blockquote.replace('<blockquote>', '<div class="alert alert-warning">');
         }
         if (note) {
-            blockquote = blockquote.replace('<blockquote>', '<div class="alert alert-success">');
+            blockquote = blockquote.replace('<blockquote>', '<div class="alert alert-default">');
         }
         return blockquote;
     },
