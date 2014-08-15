@@ -94,7 +94,8 @@ function getPage (site, fullFilePath) {
     var page = front.attributes;
     page.content = front.body;
     page.path = fullFilePath;
-    page.url = S(path.join(path.relative(site.root_path, path.dirname(fullFilePath)), removeFileExtension(fullFilePath))).replaceAll('\\', '/').s;
+    page.url = '/' + S(path.join(path.relative(site.root_path, path.dirname(fullFilePath)), removeFileExtension(fullFilePath))).replaceAll('\\', '/').s;
+    console.log(page.url);
     page.title = page.title || '';
     page.date = page.date || '';
     site.pages.push(page);
