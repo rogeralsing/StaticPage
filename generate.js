@@ -88,6 +88,19 @@ function removeFileExtension(filename) {
     return filenameWoExtension;
 }
 
+function getPage (site, fullFilePath) {
+    var f = fs.readFileSync(fullFilePath, 'utf8');
+    var front = fm(f);
+    var page = front.attributes;
+    page.content = front.body;
+    page.path = fullFilePath;
+    page.url = S(path.join(path.relative(site.root_path, path.dirname(fullFilePath)), removeFileExtension(fullFilePath))).replaceAll('\\', '/').s;
+    page.title = page.title || '';
+    page.date = page.date || '';
+    site.pages.push(page);
+    return page;
+}
+
 function processDirectory(root, dir, site) {
     site.directories.push(dir);
     var fullpath = path.join(root, dir);
@@ -104,18 +117,7 @@ function processDirectory(root, dir, site) {
                 //ignore this directory...
             }
         } else {
-            var getPage = function(site, fullFilePath) {
-                var f = fs.readFileSync(fullFilePath, 'utf8');
-                var front = fm(f);
-                var page = front.attributes;
-                page.content = front.body;
-                page.path = fullFilePath;
-                page.url = path.join(path.relative(site.root_path, path.dirname(fullFilePath)), removeFileExtension(filename));
-                page.title = page.title || '';
-                page.date = page.date || '';
-                site.pages.push(page);
-                return page;
-            }
+            
             var extension = path.extname(filename);
             switch(extension) {
                 case ".md":
