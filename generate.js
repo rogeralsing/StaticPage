@@ -8,21 +8,25 @@ var Liquid = require("liquid-node");
 var liquidEngine = new Liquid.Engine();
 var mkdirp = require('mkdirp');
 var outputRoot = "../tmp/output";
-var wikiRoot = "../tmp/wiki";
+var wikiRoot = "../tmp/akka/documentation/wiki";
 var siteRoot = '../tmp/site';
 
-function copyWikiFiles() {
-    var wikiFiles = fs.readdirSync(wikiRoot);
+function copyWikiFiles(dir) {
+    var currentdir = path.join(wikiRoot,dir);
+    var wikiFiles = fs.readdirSync(currentdir);
     wikiFiles.forEach(function(filename) {
-        var stat = fs.statSync(path.join(wikiRoot, filename));
-        if(stat && stat.isDirectory()) {} else {
+        var stat = fs.statSync(path.join(currentdir, filename));
+        if(stat && stat.isDirectory()) {
+            //recurse and copy subfolder
+            copyWikiFiles(path.join(dir,filename))
+        } else {
             var newName = S(filename).replaceAll('-', ' ').s;
-            var body = fs.readFileSync(path.join(wikiRoot, filename), 'UTF8');
+            var body = fs.readFileSync(path.join(currentdir, filename), 'UTF8');
             console.log(newName);
             //console.log(body);
             var title = removeFileExtension(newName);
             body = '---\nlayout: wiki\ntitle: ' + title + '\n---\n' + body;
-            fs.writeFileSync(path.join(siteRoot, "wiki", newName), body);
+            fs.writeFileSync(path.join(siteRoot, "wiki",dir, newName), body);
         }
     });
 }
