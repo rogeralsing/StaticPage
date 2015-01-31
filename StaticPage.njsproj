@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{9e793810-c6bb-48b1-b7b1-ece86735763d}</ProjectGuid>
     <ProjectHome />
-    <ProjectView>ShowAllFiles</ProjectView>
+    <ProjectView>ProjectFiles</ProjectView>
     <StartupFile>generate.js</StartupFile>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -22,8 +22,10 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
   <ItemGroup>
+    <Content Include="build.bat" />
     <Content Include="package.json" />
     <Content Include="README.md" />
+    <Compile Include="copy-wiki.js" />
     <Compile Include="generate.js" />
     <Compile Include="marked-config.js" />
     <Compile Include="marked.js" />

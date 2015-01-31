@@ -8,31 +8,10 @@ var Liquid = require("liquid-node");
 var liquidEngine = new Liquid.Engine();
 var mkdirp = require('mkdirp');
 var outputRoot = "../tmp/output";
-var wikiRoot = "../tmp/akka/documentation/wiki";
+var wikiRoot = "../tmp/akkawiki/documentation/wiki";
 var siteRoot = '../tmp/site';
 
-function copyWikiFiles(dir) {
-    var currentdir = path.join(wikiRoot,dir);
-    var wikiFiles = fs.readdirSync(currentdir);
-    wikiFiles.forEach(function(filename) {
-        var stat = fs.statSync(path.join(currentdir, filename));
-        if(stat && stat.isDirectory()) {
-            //recurse and copy subfolder
-            copyWikiFiles(path.join(dir,filename))
-        } else {
-            var newName = S(filename).replaceAll('-', ' ').s;
-            var body = fs.readFileSync(path.join(currentdir, filename), 'UTF8');
-            console.log(newName);
-            //console.log(body);
-            var title = removeFileExtension(newName);
-            body = '---\nlayout: wiki\ntitle: ' + title + '\n---\n' + body;
-            fs.writeFileSync(path.join(siteRoot, "wiki",dir, newName), body);
-        }
-    });
-}
-
-function start(root) {
-    copyWikiFiles();
+function start(root) {    
     var site = {
         time: new Date(),
         html_pages: [],
@@ -59,7 +38,7 @@ function processMarkdownFiles(site) {
             //apply layout
             var dir = path.relative(site.root_path, path.dirname(page.path));
             var filename = removeFileExtension(page.path) + ".html";
-            console.log(page.url)
+            console.log(page.url);
             applyLayout(site, site.root_path, dir, filename, page.layout, body, page);
         });
     });
@@ -72,7 +51,7 @@ function processHtmlFiles(site) {
         //apply layout
         var dir = path.relative(site.root_path, path.dirname(page.path));
         var filename = removeFileExtension(page.path) + ".html";
-        console.log(page.url)
+        console.log(page.url);
         applyLayout(site, site.root_path, dir, filename, page.layout, body, page);
     });
 }
@@ -117,22 +96,23 @@ function processDirectory(root, dir, site) {
             //a directory
             if(!(S(filename).startsWith('_') || S(filename).startsWith('.'))) {
                 var childDir = path.join(dir, filename);
-                processDirectory(root, childDir, site)
+                processDirectory(root, childDir, site);
             } else {
                 //ignore this directory...
             }
         } else {
             
             var extension = path.extname(filename);
+            var page;
             switch(extension) {
                 case ".md":
                 case ".markdown":
-                    var page = getPage(site, fullFilePath);
+                    page = getPage(site, fullFilePath);
                     site.markdown_files.push(page);
                     break;
                 case ".html":
                 case ".htm":
-                    var page = getPage(site, fullFilePath);
+                    page = getPage(site, fullFilePath);
                     site.html_pages.push(page);
                     break;
                 default:
@@ -176,7 +156,7 @@ function applyLayout(site, root, dir, filename, layout, body, page) {
 function saveFile(dir, filename, body) {
     var fullDirPath = path.join(outputRoot, dir);
     mkdirp(fullDirPath, function(err) {
-        if(err) console.error(err)
+        if(err) console.error(err);
         var fullFilePath = path.join(fullDirPath, filename);
         fs.writeFileSync(fullFilePath, body);
         console.log("wrote file " + fullFilePath);
